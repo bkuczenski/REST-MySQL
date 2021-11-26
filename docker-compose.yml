@@ -1,0 +1,54 @@
+version: "3"
+services:
+        # API config
+        # api:
+        #   restart: always
+        #   build: ./app
+        #   volumes:
+        #     - ./app/:/usr/src/app/
+        #   ports:
+        #     - 80:80
+        #   environment:
+        #     PYTHONUNBUFFERED: 1
+        #   depends_on:
+        #     - database
+
+        database:
+            image: mysql:8.0
+            restart: always
+            ports:
+                    - 3306:3306
+            volumes:
+                    - ./mysql/data:/var/lib/mysql
+                    - ./mysql/init-script.sql:/docker-entrypoint-initdb.d/init-script.sql
+            environment:
+                MYSQL_ROOT_USER: root
+                MYSQL_ROOT_PASSWORD: root
+                MYSQL_USER: user
+                MYSQL_PASSWORD: user
+            cap_add:
+                - SYS_NICE    
+        
+        admin_container:
+            restart: on-failure
+            build: ./mysql
+            volumes:
+                - ./mysql/:/usr/src/mysql/
+            environment:
+                MYSQL_HOST: database
+                MYSQL_DB_NAME: blackbook_db
+                MYSQL_ROOT_USER: root
+                MYSQL_ROOT_PASSWORD: root
+                MYSQL_USER: user
+                MYSQL_PASSWORD: user
+                PYTHONUNBUFFERED: 1
+            depends_on: 
+                - database
+
+
+
+        
+
+    
+
+  
