@@ -1,30 +1,15 @@
-from calendar import c
-import re
-from sqlalchemy.sql.functions import current_user
-from starlette.requests import Request
-from starlette.status import HTTP_401_UNAUTHORIZED
-import uvicorn
-from dataclasses import asdict
-
 from typing import List
-
-from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 
 import db_operations, models, schemas
 from security_handler import SecurityHandler
 from database import SessionLocal, engine
-from fastapi_login import LoginManager
-from fastapi import Depends
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from fastapi_login.exceptions import InvalidCredentialsException
-
-from datetime import datetime, timedelta
-from typing import Optional
-
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -298,7 +283,3 @@ def delete_grant(grant_id: int, curr_user: schemas.User = Depends(get_current_ac
 
     db_operations.delete_grant(db, db_grant)
     return {'Grant with ID {} deleted successfully'.format(grant_id)}
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)

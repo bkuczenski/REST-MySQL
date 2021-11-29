@@ -1,5 +1,4 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, Boolean
-from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import relationship
 from database import Base
 

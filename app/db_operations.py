@@ -1,9 +1,6 @@
 from datetime import datetime
-from re import A
 from fastapi.exceptions import HTTPException
-from sqlalchemy.orm import Session, session
-from sqlalchemy.sql.functions import current_user
-from starlette.status import HTTP_406_NOT_ACCEPTABLE
+from sqlalchemy.orm import Session
 from security_handler import SecurityHandler
 import models, schemas
 from sqlalchemy import inspect
