@@ -10,5 +10,5 @@
 7. If you want to stop the containers, run **docker-compose down**
 
 ## Instructions to delete database (This will remove all data!)
-1. Stop the docker containers using **docker-compose down -v** (the **-v** is vital to delete all volumes)
+1. Stop the docker containers using **docker-compose down -v** (the **-v** is a must to delete all volumes)
 2. Navigate to REST-MySQL/mysql and run **rm -R data** to remove the created data by the database.
