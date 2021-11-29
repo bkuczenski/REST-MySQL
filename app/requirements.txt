@@ -1,5 +1,6 @@
 anyio==3.4.0
 asgiref==3.4.1
+bcrypt==3.2.0
 bidict==0.21.4
 cffi==1.15.0
 click==8.0.3
