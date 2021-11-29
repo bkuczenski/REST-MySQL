@@ -104,8 +104,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserInDB, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    if get_current_user_type(curr_user).user_type != 'admin':
+def create_user(user: schemas.UserCreate, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'admin':
         raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
 
     db_user = db_operations.get_user_by_email(db, email=user.email)
@@ -115,10 +115,10 @@ def create_user(user: schemas.UserInDB, curr_user: schemas.User = Depends(get_cu
 
 
 @app.get("/users/", response_model=List[schemas.User])
-def read_users(skip: int = 0, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    if get_current_user_type(curr_user).user_type != 'admin':
+def read_users(skip: int = 0, limit: int = 100, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'admin':
         raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
-    users = db_operations.get_users(db, skip=skip)
+    users = db_operations.get_users(db, skip=skip, limit=limit)
     return users
 
 
@@ -136,11 +136,11 @@ def read_user(user_id: int, curr_user: schemas.User = Depends(get_current_active
         if curr_user.user_id == db_user.user_id:
             return db_user
         else:
-            raise HTTPException(status_code=404, detail="User is not authorized to perform operation")
+            raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
 
 @app.put("/users/{user_id}", response_model=schemas.User)
-def update_user(user: schemas.UserInDB, user_id: int, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    if get_current_user_type(curr_user) == 'issuer':
+def update_user(user: schemas.UserCreate, user_id: int, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if get_current_user_type(curr_user).user_type == 'issuer':
         raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
     
     db_user = db_operations.get_user(db, user_id=user_id)
@@ -167,17 +167,137 @@ def delete_user(user_id: int, curr_user: schemas.User = Depends(get_current_acti
     db_operations.delete_user(db, db_user)
     return {'User with ID {} deleted successfully'.format(user_id)}
 
-# @app.post("/users/{user_id}/items/", response_model=schemas.Item)
-# def create_item_for_user(
-#     user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
-# ):
-#     return db_operations.create_user_item(db=db, item=item, user_id=user_id)
+
+@app.post("/issuers/", response_model=schemas.Issuer)
+def create_issuer(issuer: schemas.IssuerCreate, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'admin':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+
+    return db_operations.create_issuer(db=db, issuer=issuer)
 
 
-# @app.get("/items/", response_model=List[schemas.Item])
-# def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     items = db_operations.get_items(db, skip=skip, limit=limit)
-#     return items
+@app.get("/issuers/", response_model=List[schemas.Issuer])
+def read_issuers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    issuers = db_operations.get_issuers(db, skip=skip, limit=limit)
+    return issuers
+
+
+@app.get("/issuers/{issuer_id}", response_model=schemas.Issuer)
+def read_issuer(issuer_id: int, db: Session = Depends(get_db)):
+    db_issuer = db_operations.get_issuer(db, issuer_id=issuer_id)
+    
+    if db_issuer is None:
+        raise HTTPException(status_code=404, detail="Issuer not found")
+    return db_issuer
+
+@app.post("/issuers/{issuer_id}/resources/", response_model=List[schemas.Resource])
+def read_resources_for_issuer(issuer_id: int, db: Session = Depends(get_db)):
+    db_issuer = db_operations.get_issuer(db, issuer_id=issuer_id)
+    if db_issuer is None:
+        raise HTTPException(status_code=404, detail="Issuer not found")
+
+    return db_operations.get_issuer_resources(db=db, issuer_id=issuer_id)
+
+@app.post("/resources/", response_model=schemas.Resource)
+def create_resource(resource: schemas.ResourceCreate, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'issuer':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+
+    return db_operations.create_resource(db=db, resource=resource)
+
+
+@app.get("/resources/", response_model=List[schemas.Resource])
+def read_resources(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db_operations.get_resources(db, skip=skip, limit=limit)
+
+
+@app.get("/resources/{resource_id}", response_model=schemas.Resource)
+def read_resource(resource_id: int, db: Session = Depends(get_db)):
+    db_resource = db_operations.get_resource(db, resource_id=resource_id)
+    
+    if db_resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    return db_resource
+
+
+@app.put("/resources/{resource_id}", response_model=schemas.Resource)
+def update_resource(resource: schemas.ResourceCreate, resource_id: int, 
+                    curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'issuer':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+    
+    db_resource = db_operations.get_resource(db, resource_id=resource_id)
+    
+    if db_resource is None:
+            raise HTTPException(status_code=404, detail="Resource not found")
+
+    return db_operations.update_resource(db, db_resource, resource)
+
+
+@app.post("/resources/grant", response_model=schemas.Grant)
+def create_grant(grant: schemas.GrantCreate, curr_user: schemas.User = Depends(get_current_active_user), 
+                                                                            db: Session = Depends(get_db)):
+    if get_current_user_type(curr_user).user_type == 'normal':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+
+    return db_operations.create_grant(db=db, grant=grant)
+
+@app.get("/resources/{resource_id}/grants", response_model=List[schemas.Grant])
+def read_grants_by_resource(resource_id: int, db: Session = Depends(get_db), curr_user: schemas.User = Depends(get_current_active_user)):
+    if get_current_user_type(curr_user).user_type == 'normal':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+
+    db_resource = db_operations.get_resource(db, resource_id=resource_id)
+    if db_resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    return db_operations.get_grants_by_resource_id(db, resource_id)
+
+@app.get("/users/{user_id}/grants", response_model=List[schemas.Grant])
+def read_grants_by_user(user_id: int, db: Session = Depends(get_db), curr_user: schemas.User = Depends(get_current_active_user)):
+    curr_user_type = get_current_user_type(curr_user).user_type
+    if curr_user_type != 'normal' and curr_user_type != 'issuer' and curr_user_type != 'admin':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+
+    db_user = db_operations.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return db_operations.get_grants_by_user_id(db, user_id)
+
+@app.get("/grants/", response_model=List[schemas.Grant])
+def read_grants(skip: int = 0, limit: int = 100, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    if not get_current_user_type(curr_user).user_type == 'admin':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+    return db_operations.get_grants(db, skip=skip, limit=limit)
+
+
+@app.put("/grants/{grant_id}", response_model=schemas.Grant)
+def update_grant(grant: schemas.GrantCreate, grant_id: int, 
+            curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+
+    if not get_current_user_type(curr_user).user_type == 'issuer':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+    
+    db_grant = db_operations.get_grant(db, grant_id)
+    
+    if db_grant is None:
+        raise HTTPException(status_code=404, detail="Grant not found")
+
+    return db_operations.update_grant(db, db_grant, grant)
+
+@app.delete("/grants/{grant_id}")
+def delete_grant(grant_id: int, curr_user: schemas.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    curr_user_type = get_current_user_type(curr_user).user_type
+    if curr_user_type != 'normal' and curr_user_type != 'issuer' and curr_user_type != 'admin':
+        raise HTTPException(status_code=401, detail="User is not authorized to perform operation")
+    
+    db_grant = db_operations.get_grant(db, grant_id=grant_id)
+    if db_grant is None:
+        raise HTTPException(status_code=404, detail="Grant not found")
+
+    db_operations.delete_grant(db, db_grant)
+    return {'Grant with ID {} deleted successfully'.format(grant_id)}
 
 
 if __name__ == "__main__":

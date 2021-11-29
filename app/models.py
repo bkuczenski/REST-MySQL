@@ -6,8 +6,8 @@ from database import Base
 class Interface(Base):
     __tablename__ = 'Interfaces'
 
-    InterfaceId = Column(Integer, primary_key=True)
-    InterfaceName = Column(Text, nullable=False)
+    interface_id = Column('InterfaceId', Integer, primary_key=True)
+    interface_name = Column('InterfaceName', Text, nullable=False)
 
 
 class UserType(Base):
@@ -32,52 +32,53 @@ class User(Base):
 class Grant(Base):
     __tablename__ = 'Grants'
 
-    GrantId = Column(Integer, primary_key=True)
-    UserId = Column(ForeignKey('Users.UserId'), nullable=False, index=True)
-    Origin = Column(Text, nullable=False)
-    InterfaceId = Column(ForeignKey('Interfaces.InterfaceId'), nullable=False, index=True)
-    GrantDuration = Column(Integer, nullable=False)
-    Qdb = Column(Boolean, nullable=False)
-    Values = Column(Boolean, nullable=False)
-    Update = Column(Boolean, nullable=False)
-    HasQuota = Column(Boolean, nullable=False)
-    CreationDate = Column(DateTime, nullable=False)
-    Expires = Column(DateTime, nullable=False)
-    TokenQuota = Column(Integer, nullable=False)
-    TokenCount = Column(Integer, nullable=False)
-    QueryCount = Column(Integer, nullable=False)
+    grant_id = Column('GrantId', Integer, primary_key=True)
+    user_id = Column('UserId', ForeignKey('Users.UserId'), nullable=False, index=True)
+    origin = Column('Origin', Text, nullable=False)
+    resource_id = Column('ResourceId', ForeignKey('Resources.ResourceId'), nullable=False, index=True)
+    grant_duration = Column('GrantDuration', Integer, nullable=False)
+    qdb = Column('Qdb', Boolean, nullable=False)
+    values = Column('Values', Boolean, nullable=False)
+    update = Column('Update', Boolean, nullable=False)
+    has_quota = Column('HasQuota', Boolean, nullable=False)
+    creation_date = Column('CreationDate', DateTime, nullable=False)
+    expires = Column('Expires', DateTime, nullable=False)
+    token_quota = Column('TokenQuota', Integer, nullable=False)
+    token_count = Column('TokenCount', Integer, nullable=False)
+    query_count = Column('QueryCount', Integer, nullable=False)
 
-    Interface = relationship('Interface')
-    User = relationship('User')
+    resource = relationship('Resource')
+    user = relationship('User')
 
 
 class Issuer(Base):
     __tablename__ = 'Issuers'
 
-    IssuerId = Column(Integer, primary_key=True)
-    IssuerUser = Column(ForeignKey('Users.UserId'), nullable=False, index=True)
-    IssuerName = Column(Text, nullable=False)
-    PrivateKey = Column(Text, nullable=False)
-    PublicKey = Column(Text, nullable=False)
-    Expiry = Column(DateTime, nullable=False)
+    issuer_id = Column('IssuerId', Integer, primary_key=True)
+    issuer_user = Column('IssuerUser', ForeignKey('Users.UserId'), nullable=False, index=True)
+    issuer_name = Column('IssuerName', Text, nullable=False)
+    key_lifetime = Column('KeyLifetime', Integer, nullable=False)
+    private_key = Column('PrivateKey', Text, nullable=False)
+    public_key = Column('PublicKey', Text, nullable=False)
+    expiry = Column('Expiry', DateTime, nullable=False)
 
-    User = relationship('User')
+    user = relationship('User')
 
 
 class Resource(Base):
     __tablename__ = 'Resources'
 
-    ResourceId = Column(Integer, primary_key=True)
-    Issuer = Column(ForeignKey('Issuers.IssuerId'), nullable=False, index=True)
-    Origin = Column(Text, nullable=False)
-    ResourceName = Column(Text, nullable=False)
-    ResourceDescription = Column(Text, nullable=False)
-    ResourceUrl = Column(Text, nullable=False)
-    Interface = Column(ForeignKey('Interfaces.InterfaceId'), nullable=False, index=True)
-    CreationDate = Column(DateTime, nullable=False)
-    MajorRelease = Column(Integer, nullable=False)
-    MinorRelease = Column(Integer, nullable=False)
-    Patch = Column(Integer, nullable=False)
+    resource_id = Column('ResourceId', Integer, primary_key=True)
+    issuer = Column('Issuer' ,ForeignKey('Issuers.IssuerId'), nullable=False, index=True)
+    origin = Column('Origin', Text, nullable=False)
+    resource_name = Column('ResourceName', Text, nullable=False)
+    resource_description = Column('ResourceDescription', Text, nullable=False)
+    resource_url = Column('ResourceUrl', Text, nullable=False)
+    interface = Column('Interface', ForeignKey('Interfaces.InterfaceId'), nullable=False, index=True)
+    creation_date = Column('CreationDate', DateTime, nullable=False)
+    major_release = Column('MajorRelease', Integer, nullable=False)
+    minor_release = Column('MinorRelease', Integer, nullable=False)
+    patch = Column('Patch', Integer, nullable=False)
 
-    Interface1 = relationship('Interface')
-    Issuer1 = relationship('Issuer')
+    interface1 = relationship('Interface')
+    issuer1 = relationship('Issuer')

@@ -50,6 +50,7 @@ CREATE TABLE `Issuers` (
     `IssuerUser` int  NOT NULL ,
     -- used in "iss" field in JWT
     `IssuerName` text  NOT NULL ,
+    `KeyLifetime` int  NOT NULL ,
     -- used to generate tokens
     `PrivateKey` text  NOT NULL ,
     -- deployed to servers to validate tokens
@@ -94,7 +95,7 @@ CREATE TABLE `Grants` (
     -- use startswith
     `Origin` text  NOT NULL ,
     -- **
-    `InterfaceId` int  NOT NULL ,
+    `ResourceId` int  NOT NULL ,
     -- number of seconds
     `GrantDuration` int  NOT NULL ,
     -- whether to include qdb access
@@ -135,8 +136,8 @@ REFERENCES `Interfaces` (`InterfaceId`);
 ALTER TABLE `Grants` ADD CONSTRAINT `fk_Grants_UserId` FOREIGN KEY(`UserId`)
 REFERENCES `Users` (`UserId`);
 
-ALTER TABLE `Grants` ADD CONSTRAINT `fk_Grants_InterfaceId` FOREIGN KEY(`InterfaceId`)
-REFERENCES `Interfaces` (`InterfaceId`);
+ALTER TABLE `Grants` ADD CONSTRAINT `fk_Grants_ResourceId` FOREIGN KEY(`ResourceId`)
+REFERENCES `Resources` (`ResourceId`);
 
 
 
